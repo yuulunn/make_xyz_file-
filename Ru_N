@@ -1,0 +1,53 @@
+import re
+
+# Open input file and read its contents
+with open("../Ru_n2/ssages_out_1_run_0_cleaned.xml", "r") as input_file:
+    data = input_file.readlines()
+x_array = []
+y_array = []
+z_array = []
+element_array = []
+for line in data:
+    if '<atom name=' in line:
+        element_name = line.split('"')[1]
+    elif '<position>' in line:
+        numbers = re.findall(r"[-+]?\d*\.\d+|\d+", line)
+        # Convert values from Bohr to Angstrom
+        new_numbers = [str(float(num)*0.52917721092) for num in numbers]
+        x_array.append(new_numbers[0])
+        y_array.append(new_numbers[1])
+        z_array.append(new_numbers[2])
+        element_array.append(element_name)
+
+# Open output file for writing
+with open("output.txt", "w") as output_file:
+    # Write data
+    for i in range(len(element_array)):
+        output_file.write(f"{element_array[i]}\t{x_array[i]}\t{y_array[i]}\t{z_array[i]}\n")
+
+# divide each section 10 atoms and their xyz coordinate 
+with open('output.txt', 'r') as f:
+    count = 0
+    new_file_num = 1
+    new_file_name = f'file_{new_file_num}.xyz'
+    new_file = open(new_file_name, 'w')
+    new_file.write('10\n\n')
+
+    for line in f:
+        if count == 10:
+            # close current file and create new file
+            new_file.close()
+            new_file_num += 1
+            new_file_name = f'file_{new_file_num}.xyz'
+            new_file = open(new_file_name, 'w')
+            # write '10' and empty line to new file
+            new_file.write('10\n\n')
+            # reset count
+            count = 0
+        
+        # write information to new file
+        new_file.write(line)
+        count += 1
+
+    # close final file
+    new_file.close()
